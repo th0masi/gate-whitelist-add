@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GATE.IO Code Generator by thorlab</title>
+    <style>
+        body {
+            background-color: #121214;
+            color: #ffffff;
+            font-family: Arial, sans-serif;
+        }
+        a {
+            text-decoration: none;
+            color: #4a4afd;
+        }
+
+        a:link {
+            color: #333;
+        }
+
+        a:hover {
+            color: #0073e6;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 35px 45px 30px 35px;
+            background-color: #252427;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .form-input {
+            width: 100%;
+            font-size: 16px;
+            border: 1px solid #39393d;
+            border-radius: 10px;
+            background-color: #39393d;
+            padding-left: 10px;
+            height: 40px;
+            color: white;
+        }
+        .form-input-area {
+            width: 100%;
+            height: 350px;
+            font-size: 16px;
+            border: 1px solid #39393d;
+            border-radius: 10px;
+            background-color: #39393d;
+            padding-left: 10px;
+            color: white;
+        }
+        .copy-button {
+            background-color: #0073e6;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Gate Code Generator <b><a href="https://t.me/thor_lab">by thorlab</a></b></h1>
+         <div class="form-group">
+            <label class="form-label" for="tokenName">Token Name:</label>
+            <input class="form-input" type="text" id="tokenName" placeholder="example: MEME">
+        </div>
+        <div class="form-group">
+            <label class="form-label" for="chainName">Network:</label>
+            <input class="form-input" type="text" id="chainName" placeholder="example: ETH">
+        </div>
+        <div class="form-group">
+            <label class="form-label" for="wallets">List of Wallets:</label>
+            <textarea class="form-input-area" id="wallets" placeholder="Enter list of wallets"></textarea>
+        </div>
+        <button class="copy-button" onclick="copyToClipboard()">Copy code to Clipboard</button>
+        <pre id="codeOutput"></pre>
+    </div>
+
+    <script>
+        function generateCode() {
+            const tokenName = document.getElementById('tokenName').value;
+            const chainName = document.getElementById('chainName').value;
+            const wallets = document.getElementById('wallets').value.split('\n');
+
+            return `
+            function fillData(walletAddress, tokenName, chainName, rowIndex) {
+                return new Promise((resolve, reject) => {
+                    function selectToken() {
+                        let tokenInput = $(\`.batch_address_list .batch_address_list_content:eq(\${rowIndex}) .coin_name_input\`);
+                        tokenInput.click();
+                        setTimeout(() => {
+                            let tokenItem = $(\`.sel-coin-list li[data-symbol='\${tokenName}']\`);
+                            tokenItem.click();
+                            resolve();
+                        }, 500);
+                    }
+
+                    function selectChain() {
+                        let chainInput = $(\`.batch_address_list .batch_address_list_content:eq(\${rowIndex}) .chain_name_input\`);
+                        chainInput.click();
+                        setTimeout(() => {
+                            let chainItem = $(\`.sel-chain-list li[data-chain='\${chainName}']\`);
+                            chainItem.click();
+                            resolve();
+                        }, 1000);
+                    }
+
+                    function fillWalletAddress() {
+                        let walletInput = $(\`.batch_address_list .batch_address_list_content:eq(\${rowIndex}) .addr_value_input\`);
+                        walletInput.val(walletAddress);
+                        selectToken();
+                    }
+
+                    fillWalletAddress();
+                });
+            }
+
+            function triggerClick(selector) {
+                return new Promise((resolve) => {
+                    const element = document.querySelector(selector);
+                    if (element) {
+                        element.click();
+                    }
+                    setTimeout(resolve, 200);
+                });
+            }
+
+            async function addAndFillWallets(wallets, tokenName, chainName) {
+                for (let i = 0; i < wallets.length; i++) {
+                    if (i > 0) {
+                        await triggerClick('.toAddNewAddress');
+                    }
+                    await fillData(wallets[i], tokenName, chainName, i);
+                }
+            }
+
+            const wallets = ${JSON.stringify(wallets)};
+            const tokenName = "${tokenName}";
+            const chainName = "${chainName}";
+
+            addAndFillWallets(wallets, tokenName, chainName);
+            `;
+        }
+
+        function copyToClipboard() {
+            const codeOutput = generateCode();
+
+            navigator.clipboard.writeText(codeOutput).then(function () {
+                alert('Copied!')
+            }, function () {
+                alert('Failure to copy. Check permissions for clipboard')
+            });
+        }
+    </script>
+</body>
+</html>
